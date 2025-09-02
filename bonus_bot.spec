@@ -4,7 +4,7 @@ block_cipher = None
 
 a = Analysis(
     ['bonus_bot_app.py'],
-    pathex=[],
+    pathex=['.'],
     binaries=[],
     datas=[],
     hiddenimports=[
