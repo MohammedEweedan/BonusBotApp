@@ -1,0 +1,6 @@
+pandas==2.0.3
+python-docx==0.8.11
+pyinstaller==5.13.2
+pillow==10.0.0
+pywin32==306
+openpyxl==3.1.2
