@@ -5,46 +5,54 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        
-    - name: Install dependencies
-      run: |
-         python -m pip install --upgrade pip
-         pip install -r requirements.txt
-         python -m pywin32_postinstall -install
-        
-    - name: Build executable
-      run: |
-        pyinstaller bonus_bot.spec
-        
-    - name: List dist contents (for debugging)
-      run: |
-        dir dist
-        
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: BonusBot-Windows
-        path: dist/
-        retention-days: 30
-        
-    - name: Create Release (on tag)
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
-      with:
-        files: dist/BonusBot.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: 'x64'
+
+      - name: Install deps
+        shell: powershell
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          pip install -r requirements.txt
+
+      - name: Build onefile exe (windowed)
+        shell: powershell
+        run: |
+          pyinstaller --noconfirm --clean `
+            --onefile `
+            --windowed `
+            --name "BonusBot" `
+            bonus_bot_app.py
+
+      - name: Show dist
+        shell: powershell
+        run: |
+          Get-ChildItem -Recurse dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BonusBot-Windows
+          path: dist/BonusBot.exe
+          retention-days: 30
+
+      # Optional: attach exe to a GitHub Release if you push a tag
+      - name: Create Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/BonusBot.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
